@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="WebRTC 自 M68 版本推出新的重载方法 GetStats 以后，使用新的接口便再也获取不到发送端的丢包率了（包括所有的 Native 端和 Web 端），原因是在 void OnStatsDelivered(const rtc::scoped_refptr&lt;const RTCStatsReport&gt;&amp; report) 回调中返回的结构体 RTCStatsReport 中">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WebRTC 发送端无法获取丢包率的解决办法，以及如何获取 rtt">
+<meta property="og:url" content="http://example.com/2019/05/07/webrtc-%E5%8F%91%E9%80%81%E7%AB%AF%E6%97%A0%E6%B3%95%E8%8E%B7%E5%8F%96%E4%B8%A2%E5%8C%85%E7%8E%87%E7%9A%84%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96RTT/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="WebRTC 自 M68 版本推出新的重载方法 GetStats 以后，使用新的接口便再也获取不到发送端的丢包率了（包括所有的 Native 端和 Web 端），原因是在 void OnStatsDelivered(const rtc::scoped_refptr&lt;const RTCStatsReport&gt;&amp; report) 回调中返回的结构体 RTCStatsReport 中">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2019-05-07T06:49:21.000Z">
+<meta property="article:modified_time" content="2022-02-09T17:31:36.338Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="WebRTC RTT 丢包率">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2019/05/07/webrtc-%E5%8F%91%E9%80%81%E7%AB%AF%E6%97%A0%E6%B3%95%E8%8E%B7%E5%8F%96%E4%B8%A2%E5%8C%85%E7%8E%87%E7%9A%84%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96RTT/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>WebRTC 发送端无法获取丢包率的解决办法，以及如何获取 rtt | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2019/05/07/webrtc-%E5%8F%91%E9%80%81%E7%AB%AF%E6%97%A0%E6%B3%95%E8%8E%B7%E5%8F%96%E4%B8%A2%E5%8C%85%E7%8E%87%E7%9A%84%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96RTT/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          WebRTC 发送端无法获取丢包率的解决办法，以及如何获取 rtt
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-05-07 14:49:21" itemprop="dateCreated datePublished" datetime="2019-05-07T14:49:21+08:00">2019-05-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-10 01:31:36" itemprop="dateModified" datetime="2022-02-10T01:31:36+08:00">2022-02-10</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/RTC/" itemprop="url" rel="index"><span itemprop="name">RTC</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>WebRTC 自 M68 版本推出新的重载方法 <code>GetStats</code> 以后，使用新的接口便再也获取不到发送端的丢包率了（包括所有的 Native 端和 Web 端），原因是在 <code>void OnStatsDelivered(const rtc::scoped_refptr&lt;const RTCStatsReport&gt;&amp; report)</code> 回调中返回的结构体 <code>RTCStatsReport</code> 中没有 <code>packets_lost</code> 的定义，只有 <code>packets_sent</code>、<code>frames_encoded</code> 等信息，默认只能获取到发送的码率、帧率，而得不到丢包率、rtt 等判断网络质量的关键信息。不过 WebRTC 底层其实已经将丢包信息、rtt 等关键信息实时统计上来了，只是 <code>PeerConnectionInterface</code> 在获取 Statistics 时，没有将相关信息打包进 <code>RTCStatsReport</code> 结构体中，那么解决办法就是：在 <code>RTCStatsReport</code> 结构体中新增定义 <code>packets_lost</code>、<code>rtt_ms</code> 字段，并为其赋值即可，下面为 Native 源码中需要修改的相关代码。</p>
+<h2 id="增加-RTCOutboundRTPStreamStats-导出结构体字段定义"><a href="#增加-RTCOutboundRTPStreamStats-导出结构体字段定义" class="headerlink" title="增加 RTCOutboundRTPStreamStats 导出结构体字段定义"></a>增加 <code>RTCOutboundRTPStreamStats</code> 导出结构体字段定义</h2><p>数据发送方数据的统计记录在 Outbound 的结构中，即：<code>RTCOutboundRTPStreamStats</code>，为其在末尾新增两个字段：</p>
+<blockquote>
+<p>文件为： api&#x2F;stats&#x2F;rtcstats_objects.h </p>
+</blockquote>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">RTCOutboundRTPStreamStats</span> <span class="keyword">final</span> : <span class="keyword">public</span> RTCRTPStreamStats &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="built_in">WEBRTC_RTCSTATS_DECL</span>();</span><br><span class="line"></span><br><span class="line">  <span class="built_in">RTCOutboundRTPStreamStats</span>(<span class="type">const</span> std::string&amp; id, <span class="type">int64_t</span> timestamp_us);</span><br><span class="line">  <span class="built_in">RTCOutboundRTPStreamStats</span>(std::string&amp;&amp; id, <span class="type">int64_t</span> timestamp_us);</span><br><span class="line">  <span class="built_in">RTCOutboundRTPStreamStats</span>(<span class="type">const</span> RTCOutboundRTPStreamStats&amp; other);</span><br><span class="line">  ~<span class="built_in">RTCOutboundRTPStreamStats</span>() <span class="keyword">override</span>;</span><br><span class="line"></span><br><span class="line">  RTCStatsMember&lt;<span class="type">uint32_t</span>&gt; packets_sent;</span><br><span class="line">  RTCStatsMember&lt;<span class="type">uint64_t</span>&gt; bytes_sent;</span><br><span class="line">  <span class="comment">// TODO(hbos): Collect and populate this value. https://bugs.webrtc.org/7066</span></span><br><span class="line">  RTCStatsMember&lt;<span class="type">double</span>&gt; target_bitrate;</span><br><span class="line">  RTCStatsMember&lt;<span class="type">uint32_t</span>&gt; frames_encoded;</span><br><span class="line">    <span class="comment">// 新增字段</span></span><br><span class="line">  RTCStatsMember&lt;<span class="type">int32_t</span>&gt; packets_lost;</span><br><span class="line">  RTCStatsMember&lt;<span class="type">int32_t</span>&gt; rtt_ms;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="初始化新字段"><a href="#初始化新字段" class="headerlink" title="初始化新字段"></a>初始化新字段</h2><blockquote>
+<p>文件为：stats&#x2F;rtcstats_objects.cc</p>
+</blockquote>
+<ul>
+<li>构造函数的初始化列表增加 <code>RTCStatsMember</code> 键值对的初始化</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">RTCOutboundRTPStreamStats::<span class="built_in">RTCOutboundRTPStreamStats</span>(</span><br><span class="line">    std::string&amp;&amp; id, <span class="type">int64_t</span> timestamp_us)</span><br><span class="line">    : <span class="built_in">RTCRTPStreamStats</span>(std::<span class="built_in">move</span>(id), timestamp_us),</span><br><span class="line">      <span class="built_in">packets_sent</span>(<span class="string">&quot;packetsSent&quot;</span>),</span><br><span class="line">      <span class="built_in">bytes_sent</span>(<span class="string">&quot;bytesSent&quot;</span>),</span><br><span class="line">      <span class="built_in">target_bitrate</span>(<span class="string">&quot;targetBitrate&quot;</span>),</span><br><span class="line">      <span class="built_in">frames_encoded</span>(<span class="string">&quot;framesEncoded&quot;</span>),</span><br><span class="line">      <span class="built_in">packets_lost</span>(<span class="string">&quot;packetsLost&quot;</span>),</span><br><span class="line">      <span class="built_in">rtt_ms</span>(<span class="string">&quot;rttMs&quot;</span>) &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>拷贝构造函数初始化</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">RTCOutboundRTPStreamStats::<span class="built_in">RTCOutboundRTPStreamStats</span>(</span><br><span class="line">    <span class="type">const</span> RTCOutboundRTPStreamStats&amp; other)</span><br><span class="line">    : <span class="built_in">RTCRTPStreamStats</span>(other),</span><br><span class="line">      <span class="built_in">packets_sent</span>(other.packets_sent),</span><br><span class="line">      <span class="built_in">bytes_sent</span>(other.bytes_sent),</span><br><span class="line">      <span class="built_in">target_bitrate</span>(other.target_bitrate),</span><br><span class="line">      <span class="built_in">frames_encoded</span>(other.frames_encoded),</span><br><span class="line">      <span class="built_in">packets_lost</span>(other.packets_lost),</span><br><span class="line">      <span class="built_in">rtt_ms</span>(other.rtt_ms) &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>outbound-rtp</code> 中增加 Json 导出字段</li>
+</ul>
+<blockquote>
+<p>如果不增加，在上层 ToJoin 时是没有 <code>packetLost</code> 和 <code>rttMs</code> 字段的。</p>
+</blockquote>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// clang-format off</span></span><br><span class="line"><span class="built_in">WEBRTC_RTCSTATS_IMPL</span>(</span><br><span class="line">    RTCOutboundRTPStreamStats, RTCRTPStreamStats, <span class="string">&quot;outbound-rtp&quot;</span>,</span><br><span class="line">    &amp;packets_sent,</span><br><span class="line">    &amp;bytes_sent,</span><br><span class="line">    &amp;target_bitrate,</span><br><span class="line">    &amp;frames_encoded,</span><br><span class="line">    &amp;packets_lost,</span><br><span class="line">    &amp;rtt_ms);</span><br><span class="line"><span class="comment">// clang-format on</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="为新字段赋值"><a href="#为新字段赋值" class="headerlink" title="为新字段赋值"></a>为新字段赋值</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Provides the media independent counters (both audio and video).</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">SetOutboundRTPStreamStatsFromMediaSenderInfo</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">const</span> cricket::MediaSenderInfo&amp; media_sender_info,</span></span></span><br><span class="line"><span class="params"><span class="function">    RTCOutboundRTPStreamStats* outbound_stats)</span> </span>&#123;</span><br><span class="line">  <span class="built_in">RTC_DCHECK</span>(outbound_stats);</span><br><span class="line">  outbound_stats-&gt;ssrc = media_sender_info.<span class="built_in">ssrc</span>();</span><br><span class="line">  <span class="comment">// TODO(hbos): Support the remote case. https://crbug.com/657856</span></span><br><span class="line">  outbound_stats-&gt;is_remote = <span class="literal">false</span>;</span><br><span class="line">  outbound_stats-&gt;packets_sent =</span><br><span class="line">      <span class="built_in">static_cast</span>&lt;<span class="type">uint32_t</span>&gt;(media_sender_info.packets_sent);</span><br><span class="line">  outbound_stats-&gt;bytes_sent =</span><br><span class="line">      <span class="built_in">static_cast</span>&lt;<span class="type">uint64_t</span>&gt;(media_sender_info.bytes_sent);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 为新字段赋值</span></span><br><span class="line">  outbound_stats-&gt;packets_lost =</span><br><span class="line">      <span class="built_in">static_cast</span>&lt;<span class="type">int32_t</span>&gt;(media_sender_info.packets_lost);</span><br><span class="line">  outbound_stats-&gt;rtt_ms =</span><br><span class="line">      <span class="built_in">static_cast</span>&lt;<span class="type">int32_t</span>&gt;(media_sender_info.rtt_ms);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h2><p>通过 <code>PeerConnectionInterface</code> 的 <code>GetStats</code> 获取到的 <code>RTCStatsReport</code> 结构体 转换为 Json 字符串后，可以发现 <code>outbound-rtp</code> 节点中已经有了以上我们新增的 <code>packetsLost</code> 和 <code>rttMs</code> 两个字段。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span></span><br><span class="line">    ..... 其它节点请忽略，这里只展示 outbound-rtp</span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;outbound-rtp&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;RTCOutboundRTPAudioStream_856432637&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;timestamp&quot;</span><span class="punctuation">:</span> <span class="number">1557220118008000</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;ssrc&quot;</span><span class="punctuation">:</span> <span class="number">856432637</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;isRemote&quot;</span><span class="punctuation">:</span> <span class="keyword">false</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;mediaType&quot;</span><span class="punctuation">:</span> <span class="string">&quot;audio&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;trackId&quot;</span><span class="punctuation">:</span> <span class="string">&quot;RTCMediaStreamTrack_sender_2&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;transportId&quot;</span><span class="punctuation">:</span> <span class="string">&quot;RTCTransport_audio_1&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;codecId&quot;</span><span class="punctuation">:</span> <span class="string">&quot;RTCCodec_audio_Outbound_111&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;packetsSent&quot;</span><span class="punctuation">:</span> <span class="number">484</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;bytesSent&quot;</span><span class="punctuation">:</span> <span class="number">81000</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;packetsLost&quot;</span><span class="punctuation">:</span> <span class="number">0</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;rttMs&quot;</span><span class="punctuation">:</span> <span class="number">13</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;outbound-rtp&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;RTCOutboundRTPVideoStream_4038037569&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;timestamp&quot;</span><span class="punctuation">:</span> <span class="number">1557220118008000</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;ssrc&quot;</span><span class="punctuation">:</span> <span class="number">4038037569</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;isRemote&quot;</span><span class="punctuation">:</span> <span class="keyword">false</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;mediaType&quot;</span><span class="punctuation">:</span> <span class="string">&quot;video&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;trackId&quot;</span><span class="punctuation">:</span> <span class="string">&quot;RTCMediaStreamTrack_sender_1&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;transportId&quot;</span><span class="punctuation">:</span> <span class="string">&quot;RTCTransport_audio_1&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;codecId&quot;</span><span class="punctuation">:</span> <span class="string">&quot;RTCCodec_video_Outbound_100&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;firCount&quot;</span><span class="punctuation">:</span> <span class="number">0</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;pliCount&quot;</span><span class="punctuation">:</span> <span class="number">1</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;nackCount&quot;</span><span class="punctuation">:</span> <span class="number">0</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;qpSum&quot;</span><span class="punctuation">:</span> <span class="number">2883</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;packetsSent&quot;</span><span class="punctuation">:</span> <span class="number">559</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;bytesSent&quot;</span><span class="punctuation">:</span> <span class="number">579220</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;framesEncoded&quot;</span><span class="punctuation">:</span> <span class="number">145</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;packetsLost&quot;</span><span class="punctuation">:</span> <span class="number">0</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;rttMs&quot;</span><span class="punctuation">:</span> <span class="number">13</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+
+<p>解析 Json 字符串获取 <code>packetsLost</code> 前后两次的差值，除以时间差便可以获取到此时间段内的丢包率了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/WebRTC-RTT-%E4%B8%A2%E5%8C%85%E7%8E%87/" rel="tag"># WebRTC RTT 丢包率</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/04/16/webrtc-on-linux-alsa-audio-device-blocking/" rel="prev" title="webrtc on linux alsa audio device blocking">
+      <i class="fa fa-chevron-left"></i> webrtc on linux alsa audio device blocking
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/05/28/C-%E7%AE%97%E6%B3%95%E5%A4%A7%E5%85%A8/" rel="next" title="C++算法大全">
+      C++算法大全 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A2%9E%E5%8A%A0-RTCOutboundRTPStreamStats-%E5%AF%BC%E5%87%BA%E7%BB%93%E6%9E%84%E4%BD%93%E5%AD%97%E6%AE%B5%E5%AE%9A%E4%B9%89"><span class="nav-number">1.</span> <span class="nav-text">增加 RTCOutboundRTPStreamStats 导出结构体字段定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96%E6%96%B0%E5%AD%97%E6%AE%B5"><span class="nav-number">2.</span> <span class="nav-text">初始化新字段</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E6%96%B0%E5%AD%97%E6%AE%B5%E8%B5%8B%E5%80%BC"><span class="nav-number">3.</span> <span class="nav-text">为新字段赋值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81"><span class="nav-number">4.</span> <span class="nav-text">验证</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">John Doe</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
