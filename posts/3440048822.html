@@ -22,18 +22,18 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="在 Linux 平台下开发实时通话 SDK 其实是主要应用于未来的 IOT 行业，先基于 Ubuntu 作为开发平台，完成后再基于每个客户提供的其交叉编译工具链进行交叉编译以供用户使用。 基于 Ubuntu 下载 webrtc自行下载编译如果是自己下载编译的话，可以参考官方教程，或者参考本人之前的一篇博客： https:&#x2F;&#x2F;www.jianshu.com&#x2F;p&#x2F;09f065f3feb0 ，其实 Ub">
+  <meta name="description" content="在 Linux 平台下开发实时通话 SDK 其实是主要应用于未来的 IOT 行业，先基于 Ubuntu 作为开发平台，完成后再基于每个客户提供的其交叉编译工具链进行交叉编译以供用户使用。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux 基于 webrtc 进行流媒体开发">
 <meta property="og:url" content="http://example.com/posts/3440048822.html">
 <meta property="og:site_name" content="流媒体开发">
-<meta property="og:description" content="在 Linux 平台下开发实时通话 SDK 其实是主要应用于未来的 IOT 行业，先基于 Ubuntu 作为开发平台，完成后再基于每个客户提供的其交叉编译工具链进行交叉编译以供用户使用。 基于 Ubuntu 下载 webrtc自行下载编译如果是自己下载编译的话，可以参考官方教程，或者参考本人之前的一篇博客： https:&#x2F;&#x2F;www.jianshu.com&#x2F;p&#x2F;09f065f3feb0 ，其实 Ub">
+<meta property="og:description" content="在 Linux 平台下开发实时通话 SDK 其实是主要应用于未来的 IOT 行业，先基于 Ubuntu 作为开发平台，完成后再基于每个客户提供的其交叉编译工具链进行交叉编译以供用户使用。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2019-01-23T02:56:31.000Z">
-<meta property="article:modified_time" content="2022-02-13T13:26:14.878Z">
+<meta property="article:modified_time" content="2022-02-13T15:09:04.778Z">
 <meta property="article:author" content="gobert">
 <meta property="article:tag" content="webrtc Linux Ubuntu g++">
 <meta name="twitter:card" content="summary">
@@ -130,7 +130,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">22</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">21</span></a>
 
   </li>
         <li class="menu-item menu-item-about">
@@ -205,7 +205,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-02-13 21:26:14" itemprop="dateModified" datetime="2022-02-13T21:26:14+08:00">2022-02-13</time>
+                <time title="Modified: 2022-02-13 23:09:04" itemprop="dateModified" datetime="2022-02-13T23:09:04+08:00">2022-02-13</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -229,6 +229,8 @@
 
       
         <p>在 Linux 平台下开发实时通话 SDK 其实是主要应用于未来的 IOT 行业，先基于 Ubuntu 作为开发平台，完成后再基于每个客户提供的其交叉编译工具链进行交叉编译以供用户使用。</p>
+<span id="more"></span>
+
 <h2 id="基于-Ubuntu-下载-webrtc"><a href="#基于-Ubuntu-下载-webrtc" class="headerlink" title="基于 Ubuntu 下载 webrtc"></a>基于 Ubuntu 下载 webrtc</h2><h3 id="自行下载编译"><a href="#自行下载编译" class="headerlink" title="自行下载编译"></a>自行下载编译</h3><p>如果是自己下载编译的话，可以参考官方教程，或者参考本人之前的一篇博客： <a target="_blank" rel="noopener" href="https://www.jianshu.com/p/09f065f3feb0">https://www.jianshu.com/p/09f065f3feb0</a> ，其实 Ubuntu 下编译 webrtc 是比较简单的，只要可以翻墙，其它都只是时间问题了。</p>
 <h3 id="无法翻墙下载"><a href="#无法翻墙下载" class="headerlink" title="无法翻墙下载"></a>无法翻墙下载</h3><p>那么可以通过下载本人配置的一个 Docker 镜像进行进行编译： <a target="_blank" rel="noopener" href="https://hub.docker.com/r/cgb0210/ubuntu_build">https://hub.docker.com/r/cgb0210/ubuntu_build</a> ，由于 Docker 不适合作为开发环境，下载后，建议用户将 develop 目录下的文件拷贝到自己的开发环境中，并参考 <a target="_blank" rel="noopener" href="https://www.jianshu.com/p/09f065f3feb0">https://www.jianshu.com/p/09f065f3feb0</a> 配置相关环境变量，实现本地编译,过程主要包含 3 步：</p>
 <h3 id="配置-depot-tools-环境变量"><a href="#配置-depot-tools-环境变量" class="headerlink" title="配置 depot_tools 环境变量"></a>配置 depot_tools 环境变量</h3><p>将 <code>export PATH=$PATH:/home/gobert/develop/depot_tools</code> 添加到 <code>/etc/profile</code> 文件尾部；</p>

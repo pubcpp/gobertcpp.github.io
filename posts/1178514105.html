@@ -22,18 +22,18 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="C++日志组件 spdlogspdlog 是基于C++ 11的开源的轻量级的日志组件，引入也非常简单，仅仅需要引入头文件就可以了。 线程安全命名空间 spdlog 之下的大多数函数都是线程安全的，除了： 123void spdlog::set_pattern(const std::string&amp;);void spdlog::set_formatter(formatter_ptr);void">
+  <meta name="description" content="C++日志组件 spdlogspdlog 是基于C++ 11的开源的轻量级的日志组件，引入也非常简单，仅仅需要引入头文件就可以了。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="C++ 开源日志库 spdlog">
 <meta property="og:url" content="http://example.com/posts/1178514105.html">
 <meta property="og:site_name" content="流媒体开发">
-<meta property="og:description" content="C++日志组件 spdlogspdlog 是基于C++ 11的开源的轻量级的日志组件，引入也非常简单，仅仅需要引入头文件就可以了。 线程安全命名空间 spdlog 之下的大多数函数都是线程安全的，除了： 123void spdlog::set_pattern(const std::string&amp;);void spdlog::set_formatter(formatter_ptr);void">
+<meta property="og:description" content="C++日志组件 spdlogspdlog 是基于C++ 11的开源的轻量级的日志组件，引入也非常简单，仅仅需要引入头文件就可以了。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2018-03-01T16:04:36.000Z">
-<meta property="article:modified_time" content="2022-02-13T13:26:14.878Z">
+<meta property="article:modified_time" content="2022-02-13T15:08:31.918Z">
 <meta property="article:author" content="gobert">
 <meta name="twitter:card" content="summary">
 
@@ -129,7 +129,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">22</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">21</span></a>
 
   </li>
         <li class="menu-item menu-item-about">
@@ -204,7 +204,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-02-13 21:26:14" itemprop="dateModified" datetime="2022-02-13T21:26:14+08:00">2022-02-13</time>
+                <time title="Modified: 2022-02-13 23:08:31" itemprop="dateModified" datetime="2022-02-13T23:08:31+08:00">2022-02-13</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -228,6 +228,8 @@
 
       
         <h1 id="C-日志组件-spdlog"><a href="#C-日志组件-spdlog" class="headerlink" title="C++日志组件 spdlog"></a>C++日志组件 spdlog</h1><p><code>spdlog</code> 是基于C++ 11的开源的轻量级的日志组件，引入也非常简单，仅仅需要引入头文件就可以了。</p>
+<span id="more"></span>
+
 <h2 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h2><p>命名空间 <code>spdlog</code> 之下的大多数函数都是线程安全的，除了：</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">spdlog::set_pattern</span><span class="params">(<span class="type">const</span> std::string&amp;)</span></span>;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">spdlog::set_formatter</span><span class="params">(formatter_ptr)</span></span>;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">spdlog::set_error_handler</span><span class="params">(log_err_handler)</span></span>;</span><br></pre></td></tr></table></figure>
 

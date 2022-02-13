@@ -22,18 +22,18 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="下载 Boost 源码从官方下载 Boost 源码，之前用的一直是 boost 1.58.0，今天去官方网站看到最新的已经是 boost 1.66.0，最新版本的下载地址是：下载地址 建议使用迅雷进行下载，通过浏览器下的比较慢。下载后解压到自己的开源项目目录下，如：E:\OpenSource\boost_1_66_0 Windows 下通过 Visual Studio 2015 编译启动 VS20">
+  <meta name="description" content="下载 Boost 源码">
 <meta property="og:type" content="article">
 <meta property="og:title" content="BOOST 在 Windows 下通过 VS 进行编译">
 <meta property="og:url" content="http://example.com/posts/827497819.html">
 <meta property="og:site_name" content="流媒体开发">
-<meta property="og:description" content="下载 Boost 源码从官方下载 Boost 源码，之前用的一直是 boost 1.58.0，今天去官方网站看到最新的已经是 boost 1.66.0，最新版本的下载地址是：下载地址 建议使用迅雷进行下载，通过浏览器下的比较慢。下载后解压到自己的开源项目目录下，如：E:\OpenSource\boost_1_66_0 Windows 下通过 Visual Studio 2015 编译启动 VS20">
+<meta property="og:description" content="下载 Boost 源码">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2018-03-12T06:19:16.000Z">
-<meta property="article:modified_time" content="2022-02-13T13:26:14.878Z">
+<meta property="article:modified_time" content="2022-02-13T15:08:26.658Z">
 <meta property="article:author" content="gobert">
 <meta name="twitter:card" content="summary">
 
@@ -129,7 +129,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">22</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">21</span></a>
 
   </li>
         <li class="menu-item menu-item-about">
@@ -204,7 +204,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-02-13 21:26:14" itemprop="dateModified" datetime="2022-02-13T21:26:14+08:00">2022-02-13</time>
+                <time title="Modified: 2022-02-13 23:08:26" itemprop="dateModified" datetime="2022-02-13T23:08:26+08:00">2022-02-13</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -227,7 +227,9 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="下载-Boost-源码"><a href="#下载-Boost-源码" class="headerlink" title="下载 Boost 源码"></a>下载 Boost 源码</h1><p>从官方下载 Boost 源码，之前用的一直是 boost 1.58.0，今天去官方网站看到最新的已经是 boost 1.66.0，最新版本的下载地址是：<a target="_blank" rel="noopener" href="https://akamai.bintray.com/59/596389389c005814ecb2a6b64c31dccd2c3e6fbc5a802b4dfada999ae5844628?__gda__=exp=1520835412~hmac=6d6c97450b9b0b9421f696c922c483f87493fe9a10890fc7235a1c30c120f8e1&response-content-disposition=attachment;filename=%22boost_1_66_0.7z%22&response-content-type=application/x-7z-compressed&requestInfo=U2FsdGVkX19TK62uO_jw5nC8JAtKkRu4cX28_lg3Z3y4xQkcbs9DqFSaTA0PDQKfCQ9Q94pRYGu60LzIyLyeN5mNvuokt1GI_MdVPpMBQLpNhTWhePsfBOrGtyhg6MOCF0JFr3mSugB0Sihk9fO5Wr1BR4MLQS9n78rtxF7JwNmR7sZ6on6X6jtu9UTYTMBy&response-X-Checksum-Sha1=075d0b43980614054b1f1bafd189f863bba6600e&response-X-Checksum-Sha2=596389389c005814ecb2a6b64c31dccd2c3e6fbc5a802b4dfada999ae5844628">下载地址</a></p>
+        <h1 id="下载-Boost-源码"><a href="#下载-Boost-源码" class="headerlink" title="下载 Boost 源码"></a>下载 Boost 源码</h1><span id="more"></span>
+
+<p>从官方下载 Boost 源码，之前用的一直是 boost 1.58.0，今天去官方网站看到最新的已经是 boost 1.66.0，最新版本的下载地址是：<a target="_blank" rel="noopener" href="https://akamai.bintray.com/59/596389389c005814ecb2a6b64c31dccd2c3e6fbc5a802b4dfada999ae5844628?__gda__=exp=1520835412~hmac=6d6c97450b9b0b9421f696c922c483f87493fe9a10890fc7235a1c30c120f8e1&response-content-disposition=attachment;filename=%22boost_1_66_0.7z%22&response-content-type=application/x-7z-compressed&requestInfo=U2FsdGVkX19TK62uO_jw5nC8JAtKkRu4cX28_lg3Z3y4xQkcbs9DqFSaTA0PDQKfCQ9Q94pRYGu60LzIyLyeN5mNvuokt1GI_MdVPpMBQLpNhTWhePsfBOrGtyhg6MOCF0JFr3mSugB0Sihk9fO5Wr1BR4MLQS9n78rtxF7JwNmR7sZ6on6X6jtu9UTYTMBy&response-X-Checksum-Sha1=075d0b43980614054b1f1bafd189f863bba6600e&response-X-Checksum-Sha2=596389389c005814ecb2a6b64c31dccd2c3e6fbc5a802b4dfada999ae5844628">下载地址</a></p>
 <p>建议使用迅雷进行下载，通过浏览器下的比较慢。<br>下载后解压到自己的开源项目目录下，如：<code>E:\OpenSource\boost_1_66_0</code></p>
 <h1 id="Windows-下通过-Visual-Studio-2015-编译"><a href="#Windows-下通过-Visual-Studio-2015-编译" class="headerlink" title="Windows 下通过 Visual Studio 2015 编译"></a>Windows 下通过 Visual Studio 2015 编译</h1><p>启动 VS2015 的 X86 本机工具命令提示符，即 <code>VS2015 x86 Native Tools Command Prompt</code> ，进入 boost 源码目录：<code>E:\OpenSource\boost_1_66_0</code>，然后执行以下命令：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">bootstrap.bat   //首先执行此命令生成 b2 编译工具</span><br><span class="line">bjam stage --toolset=msvc-14.0 --without-graph --without-graph_parallel --stagedir=&quot;D:\boost\boost_1_63_0\bin\vc14&quot; link=static runtime-link=static runtime-link=static threading=multi debug release  </span><br></pre></td></tr></table></figure>

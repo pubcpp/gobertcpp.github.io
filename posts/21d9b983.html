@@ -22,7 +22,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="WebRTC 自 M68 版本推出新的重载方法 GetStats 以后，使用新的接口便再也获取不到发送端的丢包率了（包括所有的 Native 端和 Web 端），原因是在 void OnStatsDelivered(const rtc::scoped_refptr&lt;const RTCStatsReport&gt;&amp; report) 回调中返回的结构体 RTCStatsReport 中">
@@ -33,7 +33,7 @@
 <meta property="og:description" content="WebRTC 自 M68 版本推出新的重载方法 GetStats 以后，使用新的接口便再也获取不到发送端的丢包率了（包括所有的 Native 端和 Web 端），原因是在 void OnStatsDelivered(const rtc::scoped_refptr&lt;const RTCStatsReport&gt;&amp; report) 回调中返回的结构体 RTCStatsReport 中">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2019-05-07T06:49:21.000Z">
-<meta property="article:modified_time" content="2022-02-13T13:26:14.878Z">
+<meta property="article:modified_time" content="2022-02-13T15:09:23.548Z">
 <meta property="article:author" content="gobert">
 <meta property="article:tag" content="WebRTC RTT 丢包率">
 <meta name="twitter:card" content="summary">
@@ -130,7 +130,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">22</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">21</span></a>
 
   </li>
         <li class="menu-item menu-item-about">
@@ -205,7 +205,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-02-13 21:26:14" itemprop="dateModified" datetime="2022-02-13T21:26:14+08:00">2022-02-13</time>
+                <time title="Modified: 2022-02-13 23:09:23" itemprop="dateModified" datetime="2022-02-13T23:09:23+08:00">2022-02-13</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -229,6 +229,8 @@
 
       
         <p>WebRTC 自 M68 版本推出新的重载方法 <code>GetStats</code> 以后，使用新的接口便再也获取不到发送端的丢包率了（包括所有的 Native 端和 Web 端），原因是在 <code>void OnStatsDelivered(const rtc::scoped_refptr&lt;const RTCStatsReport&gt;&amp; report)</code> 回调中返回的结构体 <code>RTCStatsReport</code> 中没有 <code>packets_lost</code> 的定义，只有 <code>packets_sent</code>、<code>frames_encoded</code> 等信息，默认只能获取到发送的码率、帧率，而得不到丢包率、rtt 等判断网络质量的关键信息。不过 WebRTC 底层其实已经将丢包信息、rtt 等关键信息实时统计上来了，只是 <code>PeerConnectionInterface</code> 在获取 Statistics 时，没有将相关信息打包进 <code>RTCStatsReport</code> 结构体中，那么解决办法就是：在 <code>RTCStatsReport</code> 结构体中新增定义 <code>packets_lost</code>、<code>rtt_ms</code> 字段，并为其赋值即可，下面为 Native 源码中需要修改的相关代码。</p>
+<span id="more"></span>
+
 <h2 id="增加-RTCOutboundRTPStreamStats-导出结构体字段定义"><a href="#增加-RTCOutboundRTPStreamStats-导出结构体字段定义" class="headerlink" title="增加 RTCOutboundRTPStreamStats 导出结构体字段定义"></a>增加 <code>RTCOutboundRTPStreamStats</code> 导出结构体字段定义</h2><p>数据发送方数据的统计记录在 Outbound 的结构中，即：<code>RTCOutboundRTPStreamStats</code>，为其在末尾新增两个字段：</p>
 <blockquote>
 <p>文件为： api&#x2F;stats&#x2F;rtcstats_objects.h </p>
